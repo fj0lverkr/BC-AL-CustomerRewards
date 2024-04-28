@@ -82,8 +82,10 @@ codeunit 50101 "Customer Rewards Ext Mgt"
         Result: JsonToken;
         JsonRepsonse: JsonToken;
     begin
-        if not CanHandle() then
+        if not CanHandle() then begin
+            Error('The current CodeUnit is not allowed to activate this extension.');
             exit; // use the mock 
+        end;
 
         // Get response from external service and update activation code information if successful 
         if (GetHttpResponse(ActivationCode, ResponseText)) then begin
