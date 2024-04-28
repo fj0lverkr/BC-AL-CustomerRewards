@@ -2,7 +2,7 @@ codeunit 50101 "Customer Rewards Ext Mgt"
 {
     EventSubscriberInstance = StaticAutomatic;
 
-    // Determine if the extension is activated
+    // Determines if the extension is activated 
     procedure IsCustomerRewardsActivated(): Boolean;
     var
         ActivationCodeInformation: Record "Activation Code Information";
@@ -15,7 +15,7 @@ codeunit 50101 "Customer Rewards Ext Mgt"
         exit(false);
     end;
 
-    // Opens the Customer Rewards Assisted Setup Guide
+    // Opens the Customer Rewards Assisted Setup Guide 
     procedure OpenCustomerRewardsWizard();
     var
         CustomerRewardsWizard: Page "Customer Rewards Wizard";
@@ -23,7 +23,7 @@ codeunit 50101 "Customer Rewards Ext Mgt"
         CustomerRewardsWizard.RunModal();
     end;
 
-    // Opens the Reward Level page
+    // Opens the Reward Level page 
     procedure OpenRewardsLevelPage();
     var
         RewardsLevelList: Page "Reward Level List";
@@ -31,22 +31,33 @@ codeunit 50101 "Customer Rewards Ext Mgt"
         RewardsLevelList.Run();
     end;
 
-    // Determines the corresponding Reward Level
+    // Determines the corresponding reward level and returns it 
     procedure GetRewardLevel(RewardPoints: Integer) RewardLevelTxt: Text;
     var
         RewardLevel: Record "Reward Level";
         MinRewardLevelPoints: Integer;
     begin
-        RewardLevelTxt := NoRewardLevelTxt;
+        RewardLevelTxt := NoRewardlevelTxt;
+
         if RewardLevel.IsEmpty() then
             exit;
         RewardLevel.SetRange("Minimum Reward Points", 0, RewardPoints);
-        RewardLevel.SetCurrentKey("Minimum Reward Points"); // sorted in ascending order
-        RewardLevel.FindLast();
-        RewardLevelTxt := RewardLevel.Level;
+        RewardLevel.SetCurrentKey("Minimum Reward Points"); // sorted in ascending order 
+
+        if not RewardLevel.FindFirst() then
+            exit;
+        MinRewardLevelPoints := RewardLevel."Minimum Reward Points";
+
+        if RewardPoints >= MinRewardLevelPoints then begin
+            RewardLevel.Reset();
+            RewardLevel.SetRange("Minimum Reward Points", MinRewardLevelPoints, RewardPoints);
+            RewardLevel.SetCurrentKey("Minimum Reward Points"); // sorted in ascending order 
+            RewardLevel.FindLast();
+            RewardLevelTxt := RewardLevel.Level;
+        end;
     end;
 
-    // Activates Customer Rewards if code is validated succesfully
+    // Activates Customer Rewards if activation code is validated successfully  
     procedure ActivateCustomerRewards(ActivationCode: Text): Boolean;
     var
         ActivationCodeInformation: Record "Activation Code Information";
@@ -80,10 +91,8 @@ codeunit 50101 "Customer Rewards Ext Mgt"
 
             if (JsonRepsonse.SelectToken('ActivationResponse', Result)) then
                 if (Result.AsValue().AsText() = 'Success') then begin
-
                     if (ActivationCodeInfo.FindFirst()) then
                         ActivationCodeInfo.Delete();
-
                     ActivationCodeInfo.Init();
                     ActivationCodeInfo.ActivationCode := ActivationCode;
                     ActivationCodeInfo."Activation Date" := Today;
@@ -131,5 +140,5 @@ codeunit 50101 "Customer Rewards Ext Mgt"
 
     var
         DummySuccessResponseTxt: Label '{"ActivationResponse": "Success"}', Locked = true;
-        NoRewardLevelTxt: TextConst ENU = 'NONE';
+        NoRewardlevelTxt: TextConst ENU = 'NONE';
 }
